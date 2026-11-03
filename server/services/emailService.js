@@ -6,11 +6,15 @@ const { fromZonedTime } = require("date-fns-tz");
    TRANSPORTER
 ===================================================== */
 
+const emailService = process.env.EMAIL_SERVICE?.trim() || "gmail";
+const emailUser = process.env.EMAIL_USER?.trim();
+const emailPass = process.env.EMAIL_PASS;
+
 const transporter = nodemailer.createTransport({
-  service: process.env.EMAIL_SERVICE || "gmail",
+  service: emailService,
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
+    user: emailUser,
+    pass: emailService.toLowerCase() === "gmail" ? emailPass?.replace(/\s/g, "") : emailPass,
   },
 });
 
@@ -128,7 +132,7 @@ const generateICS = (booking, duration = 30) =>
         description: booking.note || "",
         organizer: {
           name: process.env.ADMIN_NAME,
-          email: process.env.EMAIL_USER,
+          email: emailUser,
         },
         attendees: [{ email: booking.email, name: booking.name }],
       },
@@ -166,7 +170,7 @@ ${button("Join meeting", process.env.MEET_LINK)}
   const ics = await generateICS(booking, duration);
 
   await transporter.sendMail({
-    from: `"${process.env.ADMIN_NAME}" <${process.env.EMAIL_USER}>`,
+    from: `"${process.env.ADMIN_NAME}" <${emailUser}>`,
     to: booking.email,
     subject: `Meeting Schedule with ${process.env.ADMIN_NAME} on ${booking.date} at ${booking.time}`,
     html: emailTemplate(content),
@@ -235,7 +239,7 @@ Join meeting →
   const ics = await generateICS(booking, duration);
 
   await transporter.sendMail({
-    from: `"${process.env.ADMIN_NAME}" <${process.env.EMAIL_USER}>`,
+    from: `"${process.env.ADMIN_NAME}" <${emailUser}>`,
     to: process.env.ADMIN_EMAIL,
     subject: `New booking: ${booking.name} • ${booking.date} ${booking.time}`,
     html: emailTemplate(content),
@@ -266,7 +270,7 @@ ${otp}
 `;
 
   await transporter.sendMail({
-    from: `"${process.env.ADMIN_NAME}" <${process.env.EMAIL_USER}>`,
+    from: `"${process.env.ADMIN_NAME}" <${emailUser}>`,
     to: email,
     subject: "Verification code for meeting scheduling",
     html: emailTemplate(content),
@@ -359,7 +363,7 @@ ${button("Join meeting", meetLink)}
   const ics = await generateICS(booking, duration);
 
   await transporter.sendMail({
-    from: `"${process.env.ADMIN_NAME}" <${process.env.EMAIL_USER}>`,
+    from: `"${process.env.ADMIN_NAME}" <${emailUser}>`,
     to: booking.email,
     subject: `Reminder: Meeting in ${remaining}`,
     html: emailTemplate(content),
